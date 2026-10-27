@@ -6,6 +6,7 @@ import { SiteFooter } from '@/components/site-footer'
 export const metadata: Metadata = {
   title: 'StockSnap — Your shop, counted clearly',
   description: 'A friendly stock-taking agent for small traders.',
+  icons: { icon: '/favicon.svg' },
 }
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover', colorScheme: 'light dark', themeColor: '#ffc72c' }
