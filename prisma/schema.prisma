@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Scan {
+  id        String   @id @default(cuid())
+  title     String
+  itemCount Int
+  totalValueKes Int
+  date      String
+  status    String
+  imageUrl  String?
+  items     Item[]
+}
+
+model Item {
+  id              String @id @default(cuid())
+  scanId          String
+  scan            Scan   @relation(fields: [scanId], references: [id])
+  name            String
+  unit            String
+  category        String
+  quantity        Int
+  expectedQuantity Int
+  condition       String
+  unitPriceKes    Int
+  confidence      Int
+  confirmed       Boolean
+  suggestedAction String
+  actionReason    String
+  colorHex        String
+}
