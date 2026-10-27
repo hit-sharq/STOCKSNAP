@@ -16,6 +16,16 @@ model Scan {
   status    String
   imageUrl  String?
   items     Item[]
+  steps     AgentStep[]
+}
+
+model AgentStep {
+  id         String @id @default(cuid())
+  scanId     String
+  scan       Scan   @relation(fields: [scanId], references: [id])
+  key        String
+  status     String
+  summary    String?
 }
 
 model Item {

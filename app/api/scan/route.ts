@@ -45,6 +45,16 @@ export async function POST(req: Request) {
           totalValueKes: items.reduce((s: number, it: any) => s + it.quantity * it.unitPriceKes, 0),
           date: 'Just now',
           status: items.length ? 'Needs you' : 'Done',
+          steps: {
+            create: [
+              { key: 'detect', status: 'done', summary: `Found ${items.reduce((s: number, i: any) => s + i.quantity, 0)} items` },
+              { key: 'identify', status: 'done', summary: `${items.filter((i: any) => i.confidence < 80).length} low-confidence items` },
+              { key: 'reconcile', status: 'done', summary: 'Stock reconciled' },
+              { key: 'review', status: items.some((i: any) => i.confidence < 80) ? 'awaiting_user' : 'done', summary: 'Review complete' },
+              { key: 'decide', status: 'done', summary: 'Actions suggested' },
+              { key: 'list', status: 'done', summary: 'Listings drafted' },
+            ],
+          },
           items: {
             create: items.map((it: any) => ({
               name: it.name,
