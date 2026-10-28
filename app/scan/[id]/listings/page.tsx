@@ -23,6 +23,7 @@ export default function ListingsPage() {
             </div>
           ))}
         </div>
+        <Link href="/store/demo" className="button button-yellow" style={{ marginTop: 20, marginRight: 10 }}>View shop</Link>
         <Link href="/" className="button button-light" style={{ marginTop: 20 }}>Back home</Link>
       </div>
     </main>
