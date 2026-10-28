@@ -17,9 +17,10 @@ export async function detectItemsFromImage(dataUrl: string) {
         temperature: 0.2,
       }),
     })
-    if (!res.ok) return null
+    if (!res.ok) { console.error('Meta API error', res.status, await res.text()); return null }
     const data = await res.json()
     const text = data?.choices?.[0]?.message?.content ?? ''
+    console.log('Meta vision response:', text.slice(0,500))
     const match = text.match(/\[[\s\S]*\]/)
     if (!match) return null
     return JSON.parse(match[0])

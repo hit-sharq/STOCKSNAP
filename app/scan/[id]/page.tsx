@@ -24,6 +24,7 @@ export default function ScanPage() {
             <div className="ledger-price"><strong>KES {item.unitPriceKes}</strong></div>
           </div>
         ))}
+        <Link href={`/scan/${id}/listings`} className="button button-yellow" style={{ marginTop: 20, marginRight: 10 }}>Create listings</Link>
         <Link href="/" className="button button-light" style={{ marginTop: 20 }}>Back home</Link>
       </div>
     </main>
