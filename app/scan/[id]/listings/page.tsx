@@ -23,7 +23,7 @@ export default function ListingsPage() {
             </div>
           ))}
         </div>
-        <Link href="/store/demo" className="button button-yellow" style={{ marginTop: 20, marginRight: 10 }}>View shop</Link>
+        <button className="button button-yellow" style={{ marginTop: 20, marginRight: 10 }} onClick={async () => { await fetch("/api/stores", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ shopId: "demo", listings }) }); window.location.href = "/store/demo" }}>Publish store</button>
         <Link href="/" className="button button-light" style={{ marginTop: 20 }}>Back home</Link>
       </div>
     </main>

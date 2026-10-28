@@ -9,15 +9,8 @@ export default function StorePage() {
   const [items, setItems] = useState<any[]>([])
 
   useEffect(() => {
-    fetch('/api/scans').then((r) => r.json()).then(async (d) => {
-      const id = d.scans?.[0]?.id
-      if (id) {
-        const r2 = await fetch(`/api/runs/${id}`)
-        const d2 = await r2.json()
-        setItems(d2.items ?? [])
-      }
-    }).catch(() => {})
-  }, [])
+    fetch(`/api/stores/${params.shopId}`).then((r) => r.json()).then((d) => setItems(d.listings ?? [])).catch(() => {})
+  }, [params.shopId])
 
   return (
     <main className="app-shell">
@@ -26,7 +19,7 @@ export default function StorePage() {
         <div className="scan-list">
           {items.map((item: any) => (
             <div key={item.id} className="scan-row">
-              <div className="scan-info"><strong>{item.name}</strong><span>KES {item.unitPriceKes} · Grade {item.condition}</span></div>
+              <div className="scan-info"><strong>{item.name ?? item.title}</strong><span>KES {item.unitPriceKes ?? item.priceKes}</span></div>
               <button className="button button-yellow">Buy</button>
             </div>
           ))}
