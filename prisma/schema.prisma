@@ -44,4 +44,35 @@ model Item {
   suggestedAction String
   actionReason    String
   colorHex        String
+  imageUrl       String?
+}
+
+model StoreListing {
+  id           String @id @default(cuid())
+  shopId       String
+  scanId       String?
+  name         String
+  unit         String
+  category     String
+  quantity     Int
+  unitPriceKes Int
+  imageUrl     String?
+  createdAt    DateTime @default(now())
+}
+
+model Payment {
+  id                String @id @default(cuid())
+  checkoutRequestId String @unique
+  phone             String
+  amount            Int
+  status            String
+  createdAt         DateTime @default(now())
+}
+
+model SaleRecord {
+  id        String @id @default(cuid())
+  scanId    String?
+  itemName  String
+  quantity  Int
+  createdAt DateTime @default(now())
 }

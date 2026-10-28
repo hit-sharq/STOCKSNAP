@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { detectItemsFromImage } from '@/lib/meta-vision'
 import { put } from '@vercel/blob'
-import { getScans, setScan, setItems } from '@/lib/store'
 import { prisma } from '@/lib/db'
 
 export async function POST(req: Request) {
@@ -23,7 +22,7 @@ export async function POST(req: Request) {
     id: it.id ?? `item-${i}`,
     name: it.name,
     unit: it.unit ?? 'units',
-    category: it.category,
+    category: it.category ?? 'general',
     quantity: it.quantity ?? 0,
     expectedQuantity: it.expectedQuantity ?? it.quantity ?? 0,
     condition: it.condition ?? 'A',
@@ -33,65 +32,60 @@ export async function POST(req: Request) {
     suggestedAction: it.suggestedAction ?? 'Review',
     actionReason: it.actionReason ?? '',
     colorHex: it.colorHex ?? '#c98a00',
+    imageUrl,
   }))
 
-  if (process.env.DATABASE_URL) {
-    try {
-      const scan = await prisma.scan.create({
-        data: {
-          title: 'New scan',
-          imageUrl,
-          itemCount: items.length,
-          totalValueKes: items.reduce((s: number, it: any) => s + it.quantity * it.unitPriceKes, 0),
-          date: 'Just now',
-          status: items.length ? 'Needs you' : 'Done',
-          steps: {
-            create: [
-              { key: 'detect', status: 'done', summary: `Found ${items.reduce((s: number, i: any) => s + i.quantity, 0)} items` },
-              { key: 'identify', status: 'done', summary: `${items.filter((i: any) => i.confidence < 80).length} low-confidence items` },
-              { key: 'reconcile', status: 'done', summary: 'Stock reconciled' },
-              { key: 'review', status: items.some((i: any) => i.confidence < 80) ? 'awaiting_user' : 'done', summary: 'Review complete' },
-              { key: 'decide', status: 'done', summary: 'Actions suggested' },
-              { key: 'list', status: 'done', summary: 'Listings drafted' },
-            ],
-          },
-          items: {
-            create: items.map((it: any) => ({
-              name: it.name,
-              unit: it.unit,
-              category: it.category,
-              quantity: it.quantity,
-              expectedQuantity: it.expectedQuantity,
-              condition: it.condition,
-              unitPriceKes: it.unitPriceKes,
-              confidence: it.confidence,
-              confirmed: it.confirmed,
-              suggestedAction: it.suggestedAction,
-              actionReason: it.actionReason,
-              colorHex: it.colorHex,
-            })),
-          },
+  try {
+    const scan = await prisma.scan.create({
+      data: {
+        title: 'New scan',
+        imageUrl,
+        itemCount: items.length,
+        totalValueKes: items.reduce((s: number, it: any) => s + it.quantity * it.unitPriceKes, 0),
+        date: 'Just now',
+        status: items.length ? 'Needs you' : 'Done',
+        steps: {
+          create: [
+            { key: 'detect', status: 'done', summary: `Found ${items.reduce((s: number, i: any) => s + i.quantity, 0)} items` },
+            { key: 'identify', status: 'done', summary: `${items.filter((i: any) => i.confidence < 80).length} low-confidence items` },
+            { key: 'reconcile', status: 'done', summary: 'Stock reconciled' },
+            { key: 'review', status: items.some((i: any) => i.confidence < 80) ? 'awaiting_user' : 'done', summary: 'Review complete' },
+            { key: 'decide', status: 'done', summary: 'Actions suggested' },
+            { key: 'list', status: 'done', summary: 'Listings drafted' },
+          ],
         },
-      })
-      return NextResponse.json({ id: scan.id })
-    } catch (e) {
-      // fall through to in-memory
-    }
+        items: {
+          create: items.map((it: any) => ({
+            name: it.name,
+            unit: it.unit,
+            category: it.category,
+            quantity: it.quantity,
+            expectedQuantity: it.expectedQuantity,
+            condition: it.condition,
+            unitPriceKes: it.unitPriceKes,
+            confidence: it.confidence,
+            confirmed: it.confirmed,
+            suggestedAction: it.suggestedAction,
+            actionReason: it.actionReason,
+            colorHex: it.colorHex,
+            imageUrl: it.imageUrl ?? null,
+          })),
+        },
+      },
+    })
+    return NextResponse.json({ id: scan.id })
+  } catch (e) {
+    console.error(e)
+    const id = `scan-${Date.now()}`
+    return NextResponse.json({ id })
   }
-
-  const id = `scan-${Date.now()}`
-  const totalValueKes = items.reduce((s: number, it: any) => s + it.quantity * it.unitPriceKes, 0)
-  setScan({ id, title: 'New scan', itemCount: items.length, totalValueKes, date: 'Just now', status: items.length ? 'Needs you' : 'Done', items })
-  setItems(id, items)
-  return NextResponse.json({ id })
 }
 
 export async function GET() {
-  if (process.env.DATABASE_URL) {
-    try {
-      const scans = await prisma.scan.findMany({ include: { items: true } })
-      return NextResponse.json({ scans })
-    } catch {}
+  try {
+    const scans = await prisma.scan.findMany({ include: { items: true }, orderBy: { id: 'desc' } })
+    return NextResponse.json({ scans })
+  } catch (e) {
+    return NextResponse.json({ scans: [] })
   }
-  return NextResponse.json({ scans: getScans() })
 }

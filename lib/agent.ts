@@ -8,7 +8,7 @@ async function museJson(messages: any[]): Promise<any> {
   const res = await fetch(`${API_BASE}/chat/completions`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'muse-spark-1.3', messages, temperature: 0.2 }),
+    body: JSON.stringify({ model: process.env.VISION_MODEL || 'muse-spark-1.3', messages, temperature: 0.2 }),
   })
   const data = await res.json()
   const text = data?.choices?.[0]?.message?.content ?? ''
