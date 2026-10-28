@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { getScan, getScans } from '@/lib/store'
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}))
@@ -20,7 +21,19 @@ export async function POST(req: Request) {
     }))
     return NextResponse.json({ listings, scanId: scan?.id })
   } catch (e) {
-    return NextResponse.json({ listings: [] })
+    const s = scanId ? getScan(scanId) : (getScans()[0] ?? null)
+    const items = (s as any)?.items ?? []
+    const listings = items.map((it: any, i: number) => ({
+      id: it.id ?? `item-${i}`,
+      name: it.name,
+      unit: it.unit ?? 'units',
+      category: it.category ?? 'general',
+      quantity: it.quantity ?? 0,
+      unitPriceKes: it.unitPriceKes ?? 0,
+      imageUrl: it.imageUrl ?? (s as any)?.imageUrl ?? null,
+      scanId: (s as any)?.id,
+    }))
+    return NextResponse.json({ listings, scanId: (s as any)?.id })
   }
 }
 

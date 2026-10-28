@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { getScan, getItems, setItems } from '@/lib/store'
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -7,7 +8,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     const scan = await prisma.scan.findUnique({ where: { id }, include: { items: true, steps: true } })
     if (scan) return NextResponse.json({ id, scan, items: scan.items, steps: scan.steps })
   } catch {}
-  return NextResponse.json({ id, scan: null, items: [] })
+  const s = getScan(id)
+  const items = getItems(id)
+  return NextResponse.json({ id, scan: s, items })
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -32,6 +35,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const scan = await prisma.scan.findUnique({ where: { id }, include: { items: true } })
     return NextResponse.json({ ok: true, items: scan?.items ?? [] })
   } catch (e) {
+    if (Array.isArray(body.items)) {
+      const current = getItems(id)
+      const next = current.map((ci: any) => {
+        const upd = body.items.find((u: any) => u.id === ci.id)
+        return upd ? { ...ci, ...upd } : ci
+      })
+      setItems(id, next)
+      return NextResponse.json({ ok: true, items: next })
+    }
     return NextResponse.json({ ok: false }, { status: 500 })
   }
 }

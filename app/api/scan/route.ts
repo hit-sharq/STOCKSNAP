@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server'
 import { detectItemsFromImage } from '@/lib/meta-vision'
 import { put } from '@vercel/blob'
+import { prisma } from '@/lib/db'
+import { getScans, setScan, setItems } from '@/lib/store'
 import sharp from 'sharp'
 import { segment } from '@/lib/sam'
-import { prisma } from '@/lib/db'
-
-
 
 async function cropForItem(imageBuffer: Buffer, imageBase64: string, phrase: string, fallback: string) {
   try {
@@ -64,7 +63,7 @@ export async function POST(req: Request) {
   const items = imageBuffer
     ? await Promise.all(baseItems.map(async (it: any) => ({
         ...it,
-        imageUrl: (await cropForItem(imageBuffer, dataUrl, it.name, imageUrl)) || imageUrl,
+        imageUrl: (await cropForItem(imageBuffer!, dataUrl, it.name, imageUrl)) || imageUrl,
       })))
     : baseItems
 
@@ -110,6 +109,8 @@ export async function POST(req: Request) {
   } catch (e) {
     console.error(e)
     const id = `scan-${Date.now()}`
+    setScan({ id, title: 'New scan', itemCount: items.length, totalValueKes: items.reduce((s: number, it: any) => s + it.quantity * it.unitPriceKes, 0), date: 'Just now', status: items.length ? 'Needs you' : 'Done', items })
+    setItems(id, items)
     return NextResponse.json({ id })
   }
 }
@@ -119,6 +120,6 @@ export async function GET() {
     const scans = await prisma.scan.findMany({ include: { items: true }, orderBy: { id: 'desc' } })
     return NextResponse.json({ scans })
   } catch (e) {
-    return NextResponse.json({ scans: [] })
+    return NextResponse.json({ scans: getScans() })
   }
 }

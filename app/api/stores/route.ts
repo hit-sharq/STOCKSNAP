@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { setStoreListings } from '@/lib/store'
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}))
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, url: `/store/${shopId}` })
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ ok: false }, { status: 500 })
+    setStoreListings(shopId, listings)
+    return NextResponse.json({ ok: true, url: `/store/${shopId}` })
   }
 }
